@@ -1,0 +1,16 @@
+{% extends "admin_tools/dashboard/module.html" %}
+{% load static %}
+{% block module_content %}
+<script type="text/javascript" src='{% static 'air-datepicker/air-datepicker.js' %}'></script>
+<link rel="stylesheet" href="{% static 'air-datepicker/air-datepicker.css' %}">
+<input id="datePicker-{{module.id}}" name="date-range" class="border bg-white font-medium min-w-20 rounded-md shadow-sm text-font-default-light text-sm focus:ring focus:ring-primary-300 focus:border-primary-600 focus:outline-none group-[.errors]:border-red-600 group-[.errors]:focus:ring-red-200 dark:bg-gray-900 dark:border-gray-700 dark:text-font-default-dark dark:focus:border-primary-600 dark:focus:ring-primary-700 dark:focus:ring-opacity-50 dark:group-[.errors]:border-red-500 dark:group-[.errors]:focus:ring-red-600/40 px-3 py-2"/>
+<script>
+
+new AirDatepicker('#datePicker-{{module.id}}', {
+	range: true,
+	dateFormat: 'yyyy-MM-dd',
+	selectedDates: (new URL(window.location.href).searchParams.get('date-range')||'').split(', ')
+    // locale: localeEn
+})
+</script>
+{% endblock %}
