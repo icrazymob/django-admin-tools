@@ -2,8 +2,8 @@
 {% load static %}
 {% block module_content %}
 <div style="height: {{ module.height }}px;">
-	<script type="text/javascript" src='{% static 'widgets/chart.js/dist/chart.umd.js' %}'></script>
-	<script type="text/javascript" src='{% static 'widgets/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js' %}'></script>
+	<script type="text/javascript" src='{% static 'admin_tools_widgets/chart.js/dist/chart.umd.js' %}'></script>
+	<script type="text/javascript" src='{% static 'admin_tools_widgets/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js' %}'></script>
 	
 	<canvas id="lineChart-{{ module.id }}"></canvas>
 	<script>
