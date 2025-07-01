@@ -2,8 +2,8 @@
 {% load static %}
 {% block module_content %}
 <div style="height: {{ module.height }}px;">
-	<script type="text/javascript" src='{% static 'admin_tools_widgets/chart.js/_dist/chart.umd.js' %}'></script>
-	<script type="text/javascript" src='{% static 'admin_tools_widgets/chartjs-adapter-date-fns/_dist/chartjs-adapter-date-fns.bundle.min.js' %}'></script>
+	<script type="text/javascript" src='{% static "admin_tools_widgets/chart.js/_dist/chart.umd.js" %}'></script>
+	<script type="text/javascript" src='{% static "admin_tools_widgets/chartjs-adapter-date-fns/_dist/chartjs-adapter-date-fns.bundle.min.js" %}'></script>
 
 	<div style="margin-top: -20px; display:flex; width: 100%">
 		<select id="timeUnit-{{ module.id }}" style="padding: 4px 8px;border-radius: 8px;background: white;color: black;margin-left: auto;" onchange="updateChart_{{ module.id }}()">
@@ -19,11 +19,36 @@
 		let chart_{{ module.id }};
 
 		function aggregateData_{{ module.id }}(timeUnit) {
+			if (!initial_data_{{ module.id }}.datasets) {
+				return { labels: [], datasets: [] };
+			}
+
 			const aggregatedData = initial_data_{{ module.id }}.datasets.map(dataset => {
 				const dataMap = new Map();
 
+				if (!dataset.data) {
+					return { ...dataset, data: [] };
+				}
+
 				dataset.data.forEach((point, index) => {
-					const date = new Date(initial_data_{{ module.id }}.labels[index]);
+					let date;
+					let value;
+
+					// Handle different data formats
+					if (typeof point === 'object' && point.x !== undefined) {
+						date = new Date(point.x);
+						value = point.y || 0;
+					} else if (initial_data_{{ module.id }}.labels && initial_data_{{ module.id }}.labels[index]) {
+						date = new Date(initial_data_{{ module.id }}.labels[index]);
+						value = typeof point === 'object' ? (point.y || point) : point;
+					} else {
+						return; // Skip if we can't determine date
+					}
+
+					if (isNaN(date.getTime())) {
+						return; // Skip invalid dates
+					}
+
 					let key;
 
 					if (timeUnit === 'week') {
@@ -37,16 +62,15 @@
 					}
 
 					if (!dataMap.has(key)) {
-						dataMap.set(key, { sum: 0, count: 0 });
+						dataMap.set(key, 0);
 					}
 
-					dataMap.get(key).sum += point.y || point;
-					dataMap.get(key).count += 1;
+					dataMap.set(key, dataMap.get(key) + (Number(value) || 0));
 				});
 
 				const aggregatedPoints = Array.from(dataMap.entries()).map(([key, value]) => ({
 					x: key,
-					y: value.sum / value.count
+					y: value
 				})).sort((a, b) => new Date(a.x) - new Date(b.x));
 
 				return {
@@ -68,48 +92,50 @@
 			chart_{{ module.id }}.data = {
 				labels: aggregatedData.labels,
 				datasets: aggregatedData.datasets.map(set => ({
-					label: set.title,
+					label: set.title || set.label,
 					data: set.data,
 					fill: false,
 					tension: 0.1
 				}))
 			};
 
-			chart_{{ module.id }}.options.scales.x.time.unit = timeUnit;
+			if (chart_{{ module.id }}.options.scales.x.time) {
+				chart_{{ module.id }}.options.scales.x.time.unit = timeUnit;
+			}
 			chart_{{ module.id }}.update();
 		}
 
 		chart_{{ module.id }} = new Chart(
 			document.getElementById('lineChart-{{ module.id }}'),
 			{
-						type: '{{module.visual_type}}',
-						data: {
-			labels: initial_data_{{ module.id }}.labels,
-			datasets: initial_data_{{ module.id }}.datasets.map(set => ({
-					label: set.title,
-					data: set.data,
-					fill: false,
-					// borderColor: 'rgb(75, 192, 192)',
-					tension: 0.1
-			}))
-			},
+				type: '{{ module.visual_type }}',
+				data: {
+					labels: initial_data_{{ module.id }}.labels,
+					datasets: initial_data_{{ module.id }}.datasets.map(set => ({
+						label: set.title || set.label,
+						data: set.data,
+						fill: false,
+						// borderColor: 'rgb(75, 192, 192)',
+						tension: 0.1
+					}))
+				},
 				options: {
 					maintainAspectRatio: false,
 					responsive: true,
 					scales: {
-					    x: {
-								type: 'time',
-								time: {
-								unit: 'day',
+						x: {
+							type: 'time',
+							time: {
+								unit: 'day'
 								// displayFormats: {
 								//     quarter: 'MMM YYYY'
 								// }
-								}
+							}
 						}
 					}
 				}
 			}
-		)
+		);
 	</script>
 </div>
 {% endblock %}
