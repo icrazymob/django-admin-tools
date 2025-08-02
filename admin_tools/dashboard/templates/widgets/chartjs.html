@@ -53,7 +53,7 @@
 
 					if (timeUnit === 'week') {
 						const weekStart = new Date(date);
-						weekStart.setDate(date.getDate() - date.getDay());
+						weekStart.setDate(date.getDate() - date.getDay() + 1);
 						key = weekStart.toISOString().split('T')[0];
 					} else if (timeUnit === 'month') {
 						key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
